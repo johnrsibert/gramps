@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env -S python3
 #
 # Gramps - a GTK+/GNOME based genealogy program
 #

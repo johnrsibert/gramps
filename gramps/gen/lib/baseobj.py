@@ -2,6 +2,7 @@
 # Gramps - a GTK+/GNOME based genealogy program
 #
 # Copyright (C) 2000-2006  Donald N. Allingham
+# Copyright (C) 2024       Nick Hall
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,19 +23,20 @@
 Base Object class for Gramps
 """
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 #
-# Standard Python modules
+# Python modules
 #
-#-------------------------------------------------------------------------
-from abc import ABCMeta, abstractmethod
+# -------------------------------------------------------------------------
 import re
+from abc import ABCMeta, abstractmethod
 
-#-------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------
 #
-# Base Object
+# BaseObject
 #
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 class BaseObject(metaclass=ABCMeta):
     """
     The BaseObject is the base class for all data objects in Gramps,
@@ -55,6 +57,47 @@ class BaseObject(metaclass=ABCMeta):
         """
         Convert a serialized tuple of data to an object.
         """
+
+    def get_object_state(self):
+        """
+        Get the current object state as a dictionary.
+
+        By default this returns the public attributes of the instance.  This
+        method can be overridden if the class requires other attributes or
+        properties to be saved.
+
+        This method is called to provide the information required to serialize
+        the object.
+
+        :returns: Returns a dictionary of attributes that represent the state
+                  of the object.
+        :rtype: dict
+        """
+        attr_dict = dict(
+            (key, value)
+            for key, value in self.__dict__.items()
+            if not key.startswith("_")
+        )
+        attr_dict["_class"] = self.__class__.__name__
+        return attr_dict
+
+    def set_object_state(self, attr_dict):
+        """
+        Set the current object state using information provided in the given
+        dictionary.
+
+        By default this sets the state of the object assuming that all items in
+        the dictionary map to public attributes.  This method can be overridden
+        to set the state using custom functionality.  For performance reasons
+        it is useful to set a property without calling its setter function.  As
+        JSON provides no distinction between tuples and lists, this method can
+        also be use to convert lists into tuples where required.
+
+        :param attr_dict: A dictionary of attributes that represent the state of
+                          the object.
+        :type attr_dict: dict
+        """
+        self.__dict__.update(attr_dict)
 
     def matches_string(self, pattern, case_sensitive=False):
         """
@@ -184,7 +227,6 @@ class BaseObject(metaclass=ABCMeta):
         :param acquisition: The object to incorporate.
         :type acquisition: BaseObject
         """
-        pass
 
     @classmethod
     def create(cls, data):
